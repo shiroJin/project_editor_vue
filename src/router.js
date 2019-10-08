@@ -4,6 +4,7 @@ import Home from './views/Home.vue'
 import appInfo from './views/appInfo'
 import addApp from './views/addApp'
 import appEdit from './views/appEdit'
+
 Vue.use(Router)
 
 export default new Router({

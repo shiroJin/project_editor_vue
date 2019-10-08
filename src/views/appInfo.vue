@@ -43,9 +43,7 @@ export default {
     this.$axios
       .get('http://localhost:5000/project/appInfo/butler', {
         params: {
-          privateGroup: this.item.privateGroup,
-          targetName: this.item.targetName,
-          branchName: this.item.branchName
+          companyCode: this.item.code
         }
       })
       .then(res => {
@@ -77,6 +75,7 @@ export default {
 .info-container {
   display: flex;
   flex-direction: column;
+  margin: 0 60px;
 }
 body {
   margin: 10px 15px;
@@ -146,6 +145,7 @@ body {
 .content-wrapper {
   padding: 5px 15px;
   display: flex;
+  justify-content: space-around;
 }
 .edit-item {
   margin-top: 3px;
