@@ -1,25 +1,36 @@
 <template>
   <div>
-    <div class="wrapper">
-    <div class="content-wrapper">
-      <h2>配置信息</h2>
-      <div class="item" v-for="(key, index) in textFields" :key="index">
-        <p>{{ key }}</p>
-        <input type="text" v-model="form[key]" >
-      </div>
-    </div>
-    <div class="images-wrapper" v-if="form.images">
-      <h2>切图配置</h2>
-      <div class="image-item" v-for="(value, imageName, index) in form.images" :key="index">
-        <b>{{ imageName }}</b>
-        <input type=file name=image accept="image/*" multiple @change="upload($event, imageName)">
-        <div id="image-display">
-          <img class="image" v-for="(item, index) in form.images[imageName]" :key="index" :src="item">
+    <div class="form-wrapper" v-show="!resultShow">
+      <div class="content-wrapper">
+        <h2>配置信息</h2>
+        <div class="item" v-for="(key, index) in textFields" :key="index">
+          <p>{{ key }}</p>
+          <input type="text" v-model="form[key]" >
         </div>
       </div>
+      <div class="images-wrapper" v-if="form.images">
+        <h2>切图配置</h2>
+        <div class="image-item" v-for="(value, imageName, index) in form.images" :key="index">
+          <b>{{ imageName }}</b>
+          <input type=file name=image accept="image/*" multiple @change="upload($event, imageName, 'image')">
+          <div id="image-display">
+            <img class="image" v-for="(item, index) in form.images[imageName]" :key="index" :src="item">
+          </div>
+        </div>
+      </div>
+      <div class="files-wrapper">
+        <h2>文件配置</h2>
+        <div class="file-item" v-for="(value, fileName, index) in form.files" :key="index">
+          <div>{{ fileName }}</div>
+          <input type="file" name="image" @change="upload($event, fileName, 'file')">
+        </div>
+      </div>
+      <button class="submit-button" @click="submit">submit</button>
     </div>
-  </div>
-  <button class="submit-button" @click="submit">submit</button>
+    <div class="result-wrapper" v-if="resultShow">
+      <div style="white-space: pre;text-align: left">{{ result.status }}</div>
+      <button class="result-button" @click="commitChanges">confirmed</button>
+    </div>
   </div>
 </template>
 
@@ -28,14 +39,16 @@ export default {
   name: 'addApp',
   data() {
     return {
-      form: {}
+      form: {},
+      result: undefined,
+      resultShow: false
     }
   },
   computed: {
     textFields: function () {
       let res = []
       for (const key in this.form) {
-        if (this.form.hasOwnProperty(key) && key !== "images") {
+        if (!["images", "files"].includes(key)) {
           res.push(key)          
         }
       }
@@ -51,7 +64,7 @@ export default {
       .catch(() => {})
   },
   methods: {
-    upload: function (event, imageName) {
+    upload: function (event, imageName, type) {
       let _this = this
       let data = new FormData()
       for (let i = 0; i < event.target.files.length; i++) {
@@ -60,25 +73,45 @@ export default {
       this.$axios
         .post('http://localhost:5000/image/upload', data)
         .then(res => {
-          _this.form.images[imageName] = res.data
+          if (type == 'image') {
+            _this.form.images[imageName] = res.data
+          } else if (type == 'file') {
+            _this.form.files[imageName] = res.data[0]
+          }
         })
-        .catch(() => {})
+        .catch(() => { _this.$toast.fail('文件上传失败' + imageName) })
     },
     submit: function() {
+      let _this = this
       let postData = JSON.parse(JSON.stringify(this.form))
+      this.$toast.loading({
+        mask: true,
+        message: '提交中...'
+      })
       this.$axios
         .post('http://localhost:5000/project/newApp/butler', postData)
         .then(res => {
           console.log(res)
+          _this.$toast.clear()
+          _this.result = res.data
+          _this.resultShow = true
         })
-        .catch(err => console.log(err))
+        .catch(() => _this.$toast.fail())
+    },
+    commitChanges: function() {
+      this.$axios
+        .post('http://localhost:5000/project/commitChanges/butler', this.result.app)
+        .then(res => {
+          console.log(res)
+        })
+        .catch(() => {})
     }
   }
 }
 </script>
 
 <style scoped>
-.wrapper {
+.form-wrapper {
   display: flex;
 }
 .images-wrapper {
@@ -110,5 +143,14 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+.result-wrapper {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+.result-button {
+  width: 100px;
+  height: 50px;
 }
 </style>

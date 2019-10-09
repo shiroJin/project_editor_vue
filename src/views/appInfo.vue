@@ -38,7 +38,7 @@ export default {
       appInfo: undefined
     }
   },
-  mounted() {
+  created() {
     this.item = JSON.parse(this.$route.params.item)
     this.$axios
       .get('http://localhost:5000/project/appInfo/butler', {
