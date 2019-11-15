@@ -1,92 +1,109 @@
 <template>
-  <div class="wrapper">
-    <div class="text-wrapper">
-      <div
-        class="text-item"
-        v-for="(field, index) in textFields"
-        :key="index"
-      >
-        <div>{{ field }}</div>
-        <input type="text" v-model="appInfo[field]" style="width: 250px;">
-      </div>
+  <div>
+    <div class="nav">
+      <div class="title">编辑</div>
+      <el-button type="primary" icon="el-icon-message" @click="makeDiff" style="margin-right: 20px">保存</el-button>
     </div>
-
-    <div class="image-wrapper">
-      <div
-        class="image-item"
-        v-for="(imageUrl, imageName) in origInfo.images"
-        :key="imageName"
-      >
-        <div>{{ imageName }}</div>
-        <div class="edited">
-          <img class="slicing" :src="imageUrl">
-          <div v-if="Array.isArray(appInfo.images[imageName])" style="font-weight: bold">=></div>
-          <img v-if="Array.isArray(appInfo.images[imageName])" class="slicing" :src="appInfo.images[imageName][0]">
+    <div class="content">
+      <div class="section-wrapper">
+        <div class="section-title">字段编辑：</div>
+        <table class="table" cellspacing="0" cellpadding="4">
+          <tr>
+            <th>字段名称</th>
+            <th>字段值</th>
+          </tr>
+          <tr v-for="(field, index) in textFields" :key="index">
+            <td>
+              <div class="text-field">{{ fieldName(field) }}</div>
+            </td>
+            <td>
+              <input class="text-input" placeholder="请输入" type="text" v-model="appInfo[field]">
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="section-wrapper">
+        <div class="section-title">文件编辑</div>
+        <div class="upload-list">
+          <upload-item
+            v-for="(imageUrl, imageName) in origInfo.images"
+            :key="imageName"
+            :title="imageName"
+            :previewUrl="imageUrl"
+            :fileList="appInfo.images[imageName]"
+            @fileChanged="uploadImages"
+          />
         </div>
-        <input type="file" multiple @change="uploadImages($event, imageName)">
       </div>
-    </div>
-    <button class="submit-button" @click="makeDiff">submit</button>
-    <div class="alert" v-if="alertShow">
-      <div>{{ updateInfo }}</div>
-      <button class="cancel">cancel</button>
-      <button class="confirmed" @click="submit">confirmed</button>
     </div>
   </div>
 </template>
 
 <script>
+import { translate } from './translate'
+import uploadItem from './imageUploadItem'
 export default {
+  components: {
+    'upload-item': uploadItem
+  },
   data() {
     return {
       origInfo: {},
       appInfo: {},
       updateInfo: {},
-      alertShow: false
+      code: undefined
     }
   },
   computed: {
     textFields: function () {
       let res = []
       for (const key in this.appInfo) {
-        if (key !== 'images') {
-          res.push(key)
-        }
+        if (key !== 'images') res.push(key)
       }
       return res
     }
   },
   created () {
-    let _this = this
-    this.$axios
-      .get('http://localhost:5000/project/appInfo/butler', {
-        params: {
-          "companyCode": "mh"
-        }
-      })
-      .then(res => {
-        let data = JSON.stringify(res.data)
-        _this.appInfo = JSON.parse(data)
-        _this.origInfo = JSON.parse(data)
-      })
-      .catch(() => {})
+    this.code = this.$route.params.companyCode
+    this.fetchAppInfo()
   },
   methods: {
-    makeDiff: function () {
-      this.updateInfo = this.getUpdateInfo()
-      this.alertShow = true
+    fetchAppInfo () {
+      let _this = this
+      this.$axios
+        .get('http://localhost:3000/project/projectInfo', {
+          params: {
+            "companyCode": this.code
+          }
+        })
+        .then(res => {
+          let data = JSON.stringify(res.data)
+          _this.appInfo = JSON.parse(data)
+          _this.origInfo = JSON.parse(data)
+        })
+        .catch(() => {})
     },
-    cancel: function () {
-      this.alertShow = false
+    makeDiff: function () {
+      let _this = this
+      this.updateInfo = this.getUpdateInfo()
+      this.$alert(this.updateInfo, '修改内容', {
+        confirmButtonText: '确定',
+        callback: action => {
+          _this.submit()
+        }
+      })
     },
     submit: function () {
       let _this = this
-      console.log(JSON.stringify(this.updateInfo))
-      this.updateInfo.companyCode = "mh"
+      let postData = {
+        companyCode: this.code,
+        updateInfo: this.updateInfo
+      }
       this.$axios
-        .post('http://localhost:5000/project/updateApp/butler', this.updateInfo)
+        .post('http://localhost:3000/project/editProject', postData)
         .then(res => {
           _this.alertShow = false
+          _this.$router.go(-1)
         })
         .catch(() => {})
     },
@@ -108,7 +125,9 @@ export default {
             images[key] = value
           }
         })
-      result.images = images
+      if (Object.entries(images).length) {
+        result.images = images
+      }
       return result
     },
     uploadImages: function (event, name) {
@@ -116,41 +135,25 @@ export default {
       let files = event.target.files
       for (let index = 0; index < files.length; index++) {
         const file = files[index];
-        form.append('image', file)
+        form.append('image'+index, file)
       }
       this.$axios
-        .post('http://localhost:5000/image/upload', form)
+        .post('http://localhost:3000/files/upload', form)
         .then(res => {
           this.appInfo.images[name] = res.data
         })
+    },
+    fieldName: function (field) {
+      return translate(field)
     }
   }
 }
 </script>
 
 <style scoped>
-.wrapper {
-  padding: 0 30px;
-}
-.text-wrapper {
-  max-width: 600px;
-}
-.text-item {
-  margin: 15px 15px;
-  display: flex;
-  justify-content: space-between;
-}
-.image-wrapper {
-  display: flex;
-}
-.image-item {
+.section-wrapper {
   display: flex;
   flex-direction: column;
-  align-items: center;
-}
-.slicing {
-  border: 1px dashed lightgrey;
-  width: 100px;
 }
 .submit-button {
   width: 100px;
@@ -169,5 +172,49 @@ export default {
 .edited {
   display: flex;
   align-items: center;
+}
+.table {
+  width: 100%;
+}
+.text-field {
+  font-size: 18px;
+}
+.text-input {
+  width: 100%;
+  height: 100%;
+  border-width: 0;
+  font-size: 18px;
+  text-align: center;
+}
+tr {
+  background-color: white;
+}
+tr:nth-of-type(odd) {
+  background-color: #EBF3FF;
+}
+tr:nth-of-type(odd) .text-input {
+  background-color: #EBF3FF;
+}
+td:not(:last-child) {
+  border-left: 1px solid #eaeaea;
+  border-right: 1px solid #eaeaea;
+}
+td:last-child {
+  border-right: 1px solid #eaeaea;
+}
+.section-title {
+  margin-top: 20px;
+  text-align: left;
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+.content {
+  padding: 0 30px;
+}
+.upload-list {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
 }
 </style>

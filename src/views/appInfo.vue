@@ -1,28 +1,79 @@
 <template>
-  <div class="info-container" v-if="appInfo">
-    <div class="header">
-        <img :src=appInfo.images.AppIcon>
-        <div class="base-info">
-          <h2>{{ appInfo.CFBundleDisplayName }}</h2>
-          <p>version: {{ appInfo.CFBundleShortVersionString }}</p>
-          <p>build: {{ appInfo.CFBundleVersion }}</p>
-        </div>
-        <div class="edit-item" @click="editInfo">EDIT</div>
+  <div>
+    <div class="nav">
+      <div class="title">Hello Rails</div>
+      <div class="action">
+        <el-dropdown class="dropdown">
+          <span class="el-dropdown-link">
+            <div>Tags</div>
+            <i class="el-icon-arrow-down el-icon--right"></i>
+          </span>
+          <el-dropdown-menu class="dropdown-menu" slot="dropdown">
+            <el-dropdown-item v-for="(item, index) in tags" :key="index">
+              {{ item }}
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+        <el-dropdown class="dropdown" @command="checkout">
+          <span class="el-dropdown-link">
+            <div>切换App</div>
+            <i class="el-icon-arrow-down el-icon--right"></i>
+          </span>
+          <el-dropdown-menu class="dropdown-menu" slot="dropdown">
+            <el-dropdown-item
+              v-for="(item, index) in apps" 
+              :key="index"
+              :command="item"
+            >
+              {{ item.displayName }}
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+        <el-button type="primary" @click="pull">Git Pull</el-button>
+        <el-button type="primary" @click="addApp">新增应用</el-button>
+      </div>
     </div>
-    <div class="content-wrapper">
-      <div class="content">
-        <h2>配置信息</h2>
-        <div class="item" v-for="(value, key, index) in filterInfo()" :key="index">
-          <p>{{ key }}:</p>
-          <p>{{ value }}</p>
+    <div class="info-container" v-if="appInfo">
+      <div class="header">
+        <div class="app-wrapper">
+          <img :src=appInfo.images.AppIcon>
+          <div class="base-info">
+            <h2>{{ appInfo.CFBundleDisplayName }}</h2>
+            <p>version: {{ appInfo.CFBundleShortVersionString }}</p>
+            <p>build: {{ appInfo.CFBundleVersion }}</p>
+          </div>
+          <div style="padding: 5px; display: flex; height: 100%" v-if="dirty">
+            <el-tooltip class="text-break" :content="status" placement="bottom" popper-class="poper">
+              <el-tag type="danger" style="margin-right: 15px">WorkTree Dirty</el-tag>
+            </el-tooltip>          
+          </div>
+        </div>
+        <div class="menu">
+          <div class="menu-worktree" v-if="dirty">
+            <el-button type="warning" icon="el-icon-delete" @click="trash">Trash</el-button>
+            <el-button type="success" icon="el-icon-check" @click="preCommit">Commit</el-button>
+          </div>
+          <div class="menu-edit" v-if="!dirty">
+            <el-button type="primary" v-if="!dirty" @click="editInfo" icon="el-icon-edit">Edit</el-button>
+            <el-button type="primary" v-if="!dirty" disabled icon="el-icon-s-operation">Merge</el-button>
+          </div>
         </div>
       </div>
-      <div class="image-snapshot">
-        <h2>切图</h2>
-        <div class="image-slices">
-          <div class="slice-item" v-for="(item, key, index) in appInfo.images" :key="index">
-            <div>{{ key }}</div>
-            <img :src="item" class="slice">
+      <div class="content-wrapper">
+        <div class="content">
+          <h2>配置信息</h2>
+          <div class="item" v-for="(value, key, index) in filterInfo()" :key="index">
+            <p>{{ fieldName(key) }}:</p>
+            <p>{{ value }}</p>
+          </div>
+        </div>
+        <div class="image-snapshot">
+          <h2>切图信息</h2>
+          <div class="image-slices">
+            <div class="slice-item" v-for="(item, key, index) in appInfo.images" :key="index">
+              <div>{{ key }}</div>
+              <img :src="item" class="slice">
+            </div>
           </div>
         </div>
       </div>
@@ -31,28 +82,116 @@
 </template>
 
 <script>
+import { translate } from './translate'
 export default {
   data() {
     return {
       item: undefined,
-      appInfo: undefined
+      appInfo: undefined,
+      tags: [],
+      apps: [],
+      loading: undefined,
+      dirty: false,
+      status: ''
     }
   },
-  created() {
-    this.item = JSON.parse(this.$route.params.item)
-    this.$axios
-      .get('http://localhost:5000/project/appInfo/butler', {
-        params: {
-          companyCode: this.item.code
-        }
-      })
-      .then(res => {
-        this.appInfo = res.data
-      })
-      .catch(() => {})
+  created () {
+    this.reloadData()
   },
   methods: {
-    filterInfo: function () {
+    preCommit () {
+      this.$prompt('请输入Commit内容', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      }).then(({ value }) => {
+        this.commit(value)
+      });
+    },
+    commit (message) {
+      this.$axios
+        .post('http://localhost:3000/project/commit', {
+          msg: message
+        })
+        .then(res => {
+          this.reloadData()
+        })
+    },
+    reloadData () {
+      this.fetchCurrentApp()
+      this.fetchTags()
+      this.fetchAllApps()
+      this.fetchDirty()
+    },
+    trash () {
+      this.$axios
+        .post('http://localhost:3000/project/trash')
+        .then(res => {
+          this.reloadData()
+        })
+    },
+    pull () {
+      let _this = this
+      this.$axios
+        .post('http://localhost:3000/project/pull')
+        .then(res => {
+          let msg = res.data.msg
+          _this.$message({
+            message: msg,
+            duration: 3000,
+            showClose: true
+          })
+        })
+    },
+    checkout (app) {
+      let _this = this
+      this.loading = this.$loading({ fullscreen: true })
+      this.$axios
+        .post('http://localhost:3000/project/checkout', {
+          companyCode: app.code
+        })
+        .then(res => {
+          this.fetchCurrentApp()
+        })
+        .catch(err => {
+          this.loading.close()
+        })
+    },
+    fetchTags () {
+      this.$axios
+        .get('http://localhost:3000/project/tags')
+        .then(res => {
+          this.tags = res.data
+        })
+    },
+    fetchAllApps () {
+      this.$axios
+        .get('http://localhost:3000/project/list')
+        .then(res => {
+          this.apps = res.data
+        })
+    },
+    fetchCurrentApp () {
+      if (this.loading === undefined) {
+        this.loading = this.$loading({ fullscreen: true })
+      }
+      this.$axios
+        .get('http://localhost:3000/project/current')
+        .then(res => {
+          this.appInfo = res.data
+          this.loading.close()
+        })
+        .catch(() => {})
+    },
+    fetchDirty () {
+      let _this = this
+      this.$axios
+        .get('http://localhost:3000/project/isDirty')
+        .then(res => {
+          _this.dirty = res.data.dirty
+          _this.status = res.data.msg
+        })
+    },
+    filterInfo () {
       let result = {}
       for (const key in this.appInfo) {
         if (['CFBundleDisplayName', 'CFBundleShortVersionString', 'CFBundleVersion', 'images'].includes(key)) continue
@@ -60,12 +199,22 @@ export default {
       }
       return result
     },
-    editInfo: function () {
-      let data = JSON.stringify(this.appInfo)
+    editInfo () {
       this.$router.push({
         name: 'appEdit',
-        params: { data: data }
+        params: { companyCode: this.appInfo.kCompanyCode }
       })
+    },
+    addApp () {
+      this.$router.push({
+        name: 'addApp',
+        params: {
+          tags: JSON.stringify(this.tags)
+        }
+      })
+    },
+    fieldName: function (field) {
+      return translate(field)
     }
   }
 }
@@ -75,12 +224,18 @@ export default {
 .info-container {
   display: flex;
   flex-direction: column;
+  align-items: center;
   margin: 0 60px;
-}
-body {
-  margin: 10px 15px;
+  font-size: 18px;
 }
 .header {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 15px;
+  border-bottom: 1px dashed lightgrey;
+  min-width: 700px;
+}
+.app-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -124,6 +279,7 @@ body {
   text-align: left;
 }
 .image-snapshot {
+  width: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -134,8 +290,8 @@ body {
   text-align: left;
 }
 .image-slices {
+  width: 100%;
   display: flex;
-  align-items: flex-end;
 }
 .slice {
   margin: 5px;
@@ -143,18 +299,27 @@ body {
   max-width: 100px;
 }
 .content-wrapper {
-  padding: 5px 15px;
-  display: flex;
-  justify-content: space-around;
+  min-width: 700px;
 }
-.edit-item {
-  margin-top: 3px;
-  padding: 3px;
-  border: 2px solid lightgrey;
+.action {
+  margin-right: 15px;
+  display: flex;
+}
+.action button {
+  padding: 5px;
+  margin: 5px;
+}
+.el-dropdown-link {
+  cursor: pointer;
+  color: #2f85ff;
+  padding: 8px;
   border-radius: 3px;
-  font-size: 15px;
   font-weight: bold;
-  color: gray;
-  align-self: flex-start;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+}
+.el-icon-arrow-down {
+  font-size: 12px;
 }
 </style>
