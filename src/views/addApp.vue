@@ -90,7 +90,7 @@ export default {
   created () {
     this.tags = JSON.parse(this.$route.params.tags)
     this.$axios
-      .get('http://localhost:3000/project/app-form')
+      .get('/project/app-form')
       .then(res => {
         this.form = res.data
       })
@@ -112,7 +112,7 @@ export default {
         data.append(String(i), event.target.files[i])
       }
       this.$axios
-        .post('http://localhost:3000/files/upload', data)
+        .post('/files/upload', data)
         .then(res => {
           if (type == 'image') {
             _this.form.images[name] = res.data
@@ -130,7 +130,7 @@ export default {
         message: '提交中...'
       })
       this.$axios
-        .post('http://localhost:3000/project/addProject', postData)
+        .post('/project/addProject', postData)
         .then(res => {
           _this.$toast.clear()
           _this.result = res.data

@@ -4,7 +4,7 @@
       <div class="title">编辑</div>
       <el-button type="primary" icon="el-icon-message" @click="makeDiff" style="margin-right: 20px">保存</el-button>
     </div>
-    <div class="content">
+    <div class="content" v-if="loaded">
       <div class="section-wrapper">
         <div class="section-title">字段编辑：</div>
         <table class="table" cellspacing="0" cellpadding="4">
@@ -51,7 +51,8 @@ export default {
       origInfo: {},
       appInfo: {},
       updateInfo: {},
-      code: undefined
+      code: undefined,
+      loaded: false
     }
   },
   computed: {
@@ -69,19 +70,23 @@ export default {
   },
   methods: {
     fetchAppInfo () {
-      let _this = this
+      let loading = this.$loading({ fullScreen: true })
       this.$axios
-        .get('http://localhost:3000/project/projectInfo', {
+        .get('/project/projectInfo', {
           params: {
             "companyCode": this.code
           }
         })
         .then(res => {
           let data = JSON.stringify(res.data)
-          _this.appInfo = JSON.parse(data)
-          _this.origInfo = JSON.parse(data)
+          this.appInfo = JSON.parse(data)
+          this.origInfo = JSON.parse(data)
+          this.loaded = true
+          loading.close()
         })
-        .catch(() => {})
+        .catch(() => {
+          loading.close()
+        })
     },
     makeDiff: function () {
       let _this = this
@@ -100,7 +105,7 @@ export default {
         updateInfo: this.updateInfo
       }
       this.$axios
-        .post('http://localhost:3000/project/editProject', postData)
+        .post('/project/editProject', postData)
         .then(res => {
           _this.alertShow = false
           _this.$router.go(-1)
@@ -138,7 +143,7 @@ export default {
         form.append('image'+index, file)
       }
       this.$axios
-        .post('http://localhost:3000/files/upload', form)
+        .post('/files/upload', form)
         .then(res => {
           this.appInfo.images[name] = res.data
         })

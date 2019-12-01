@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="nav">
-      <div class="title">Hello Rails</div>
+      <div class="title">{{ greeting }}</div>
       <div class="action">
         <el-dropdown class="dropdown">
           <span class="el-dropdown-link">
@@ -54,8 +54,9 @@
             <el-button type="success" icon="el-icon-check" @click="preCommit">Commit</el-button>
           </div>
           <div class="menu-edit" v-if="!dirty">
-            <el-button type="primary" v-if="!dirty" @click="editInfo" icon="el-icon-edit">Edit</el-button>
-            <el-button type="primary" v-if="!dirty" disabled icon="el-icon-s-operation">Merge</el-button>
+            <el-button type="primary" @click="updateCurrent" icon="el-icon-refresh-left">Update</el-button>
+            <el-button type="primary" @click="editInfo" icon="el-icon-edit">Edit</el-button>
+            <el-button type="primary" disabled icon="el-icon-s-operation">Merge</el-button>
           </div>
         </div>
       </div>
@@ -92,10 +93,22 @@ export default {
       apps: [],
       loading: undefined,
       dirty: false,
-      status: ''
+      status: '',
+      greeting: ''
     }
   },
   created () {
+    let date = new Date()
+    let hour = date.getHours()
+    if (hour < 12) {
+      this.greeting = "Good morning"
+    }
+    else if (hour < 18) {
+      this.greeting = "Good afternoon"
+    }
+    else {
+      this.greeting = "Good evening"
+    }
     this.reloadData()
   },
   methods: {
@@ -109,7 +122,7 @@ export default {
     },
     commit (message) {
       this.$axios
-        .post('http://localhost:3000/project/commit', {
+        .post('/project/commit', {
           msg: message
         })
         .then(res => {
@@ -123,19 +136,25 @@ export default {
       this.fetchDirty()
     },
     trash () {
+      this.loading = this.$loading({ fullscreen: true })
       this.$axios
-        .post('http://localhost:3000/project/trash')
+        .post('/project/trash')
         .then(res => {
+          this.loading.close()
           this.reloadData()
+        })
+        .catch(err => {
+          this.loading.close()
         })
     },
     pull () {
-      let _this = this
+      this.loading = this.$loading({ fullscreen: true })
       this.$axios
-        .post('http://localhost:3000/project/pull')
+        .post('/project/pull')
         .then(res => {
           let msg = res.data.msg
-          _this.$message({
+          this.loading.close()
+          this.$message({
             message: msg,
             duration: 3000,
             showClose: true
@@ -143,10 +162,9 @@ export default {
         })
     },
     checkout (app) {
-      let _this = this
       this.loading = this.$loading({ fullscreen: true })
       this.$axios
-        .post('http://localhost:3000/project/checkout', {
+        .post('/project/checkout', {
           companyCode: app.code
         })
         .then(res => {
@@ -158,14 +176,14 @@ export default {
     },
     fetchTags () {
       this.$axios
-        .get('http://localhost:3000/project/tags')
+        .get('/project/tags')
         .then(res => {
           this.tags = res.data
         })
     },
     fetchAllApps () {
       this.$axios
-        .get('http://localhost:3000/project/list')
+        .get('/project/list')
         .then(res => {
           this.apps = res.data
         })
@@ -175,17 +193,19 @@ export default {
         this.loading = this.$loading({ fullscreen: true })
       }
       this.$axios
-        .get('http://localhost:3000/project/current')
+        .get('/project/current')
         .then(res => {
           this.appInfo = res.data
           this.loading.close()
         })
-        .catch(() => {})
+        .catch(err => {
+          this.loading.close()
+        })
     },
     fetchDirty () {
       let _this = this
       this.$axios
-        .get('http://localhost:3000/project/isDirty')
+        .get('/project/isDirty')
         .then(res => {
           _this.dirty = res.data.dirty
           _this.status = res.data.msg
@@ -213,8 +233,18 @@ export default {
         }
       })
     },
-    fieldName: function (field) {
+    fieldName (field) {
       return translate(field)
+    },
+    updateCurrent () {
+      this.loading = this.$loading({ fullscreen: true })
+      this.$axios.post("/project/pullCurrent")
+        .then(res => {
+          this.reloadData()
+        })
+        .catch(err => {
+          this.loading.close()
+        })
     }
   }
 }
