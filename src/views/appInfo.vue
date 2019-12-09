@@ -84,6 +84,8 @@
 
 <script>
 import { translate } from './translate'
+import { log } from 'util'
+import { getRequestDomain } from '../requestDomain'
 export default {
   data() {
     return {
@@ -122,7 +124,7 @@ export default {
     },
     commit (message) {
       this.$axios
-        .post('/project/commit', {
+        .post(getRequestDomain() + '/project/commit', {
           msg: message
         })
         .then(res => {
@@ -150,7 +152,7 @@ export default {
     pull () {
       this.loading = this.$loading({ fullscreen: true })
       this.$axios
-        .post('/project/pull')
+        .post(getRequestDomain() + '/project/pull')
         .then(res => {
           let msg = res.data.msg
           this.loading.close()
@@ -164,7 +166,7 @@ export default {
     checkout (app) {
       this.loading = this.$loading({ fullscreen: true })
       this.$axios
-        .post('/project/checkout', {
+        .post(getRequestDomain() + '/project/checkout', {
           companyCode: app.code
         })
         .then(res => {
@@ -176,14 +178,14 @@ export default {
     },
     fetchTags () {
       this.$axios
-        .get('/project/tags')
+        .get(getRequestDomain() + '/project/tags')
         .then(res => {
           this.tags = res.data
         })
     },
     fetchAllApps () {
       this.$axios
-        .get('/project/list')
+        .get(getRequestDomain() + '/project/list')
         .then(res => {
           this.apps = res.data
         })
@@ -193,7 +195,7 @@ export default {
         this.loading = this.$loading({ fullscreen: true })
       }
       this.$axios
-        .get('/project/current')
+        .get(getRequestDomain() + '/project/current')
         .then(res => {
           this.appInfo = res.data
           this.loading.close()
@@ -205,7 +207,7 @@ export default {
     fetchDirty () {
       let _this = this
       this.$axios
-        .get('/project/isDirty')
+        .get(getRequestDomain() + '/project/isDirty')
         .then(res => {
           _this.dirty = res.data.dirty
           _this.status = res.data.msg
@@ -238,7 +240,7 @@ export default {
     },
     updateCurrent () {
       this.loading = this.$loading({ fullscreen: true })
-      this.$axios.post("/project/pullCurrent")
+      this.$axios.post(getRequestDomain() + "/project/pullCurrent")
         .then(res => {
           this.reloadData()
         })
