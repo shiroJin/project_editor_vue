@@ -133,9 +133,7 @@ export default {
     },
     reloadData () {
       this.fetchCurrentApp()
-      this.fetchTags()
-      this.fetchAllApps()
-      this.fetchDirty()
+      this.fetchProjectRepositoryInfo()
     },
     trash () {
       this.loading = this.$loading({ fullscreen: true })
@@ -176,20 +174,6 @@ export default {
           this.loading.close()
         })
     },
-    fetchTags () {
-      this.$axios
-        .get(getRequestDomain() + '/project/tags')
-        .then(res => {
-          this.tags = res.data
-        })
-    },
-    fetchAllApps () {
-      this.$axios
-        .get(getRequestDomain() + '/project/list')
-        .then(res => {
-          this.apps = res.data
-        })
-    },
     fetchCurrentApp () {
       if (this.loading === undefined) {
         this.loading = this.$loading({ fullscreen: true })
@@ -204,13 +188,14 @@ export default {
           this.loading.close()
         })
     },
-    fetchDirty () {
-      let _this = this
+    fetchProjectRepositoryInfo () {
       this.$axios
-        .get(getRequestDomain() + '/project/isDirty')
+        .get(getRequestDomain() + '/project/repositoryInfo')
         .then(res => {
-          _this.dirty = res.data.dirty
-          _this.status = res.data.msg
+          this.dirty = res.data.is_dirty
+          this.apps = res.data.project_list
+          this.tags = res.data.tags
+          // this.status = res.data.msg
         })
     },
     filterInfo () {

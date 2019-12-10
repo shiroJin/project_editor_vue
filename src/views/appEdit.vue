@@ -42,6 +42,7 @@
 <script>
 import { translate } from './translate'
 import uploadItem from './imageUploadItem'
+import { getRequestDomain } from '../requestDomain'
 export default {
   components: {
     'upload-item': uploadItem
@@ -72,7 +73,7 @@ export default {
     fetchAppInfo () {
       let loading = this.$loading({ fullScreen: true })
       this.$axios
-        .get('/project/projectInfo', {
+        .get(getRequestDomain() + '/project/projectInfo', {
           params: {
             "companyCode": this.code
           }
@@ -105,7 +106,7 @@ export default {
         updateInfo: this.updateInfo
       }
       this.$axios
-        .post('/project/editProject', postData)
+        .post(getRequestDomain() + '/project/editProject', postData)
         .then(res => {
           _this.alertShow = false
           _this.$router.go(-1)
@@ -143,7 +144,7 @@ export default {
         form.append('image'+index, file)
       }
       this.$axios
-        .post('/files/upload', form)
+        .post(getRequestDomain() + '/files/upload', form)
         .then(res => {
           this.appInfo.images[name] = res.data
         })
