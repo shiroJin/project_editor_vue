@@ -3,17 +3,6 @@
     <div class="nav">
       <div class="title">{{ greeting }}</div>
       <div class="action">
-        <el-dropdown class="dropdown">
-          <span class="el-dropdown-link">
-            <div>Tags</div>
-            <i class="el-icon-arrow-down el-icon--right"></i>
-          </span>
-          <el-dropdown-menu class="dropdown-menu" slot="dropdown">
-            <el-dropdown-item v-for="(item, index) in tags" :key="index">
-              {{ item }}
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
         <el-dropdown class="dropdown" @command="checkout">
           <span class="el-dropdown-link">
             <div>切换App</div>
@@ -36,11 +25,11 @@
     <div class="info-container" v-if="appInfo">
       <div class="header">
         <div class="app-wrapper">
-          <img :src=appInfo.images.AppIcon>
+          <img :src="iconUrl">
           <div class="base-info">
-            <h2>{{ appInfo.CFBundleDisplayName }}</h2>
-            <p>version: {{ appInfo.CFBundleShortVersionString }}</p>
-            <p>build: {{ appInfo.CFBundleVersion }}</p>
+            <h2>{{ appInfo.plist.CFBundleDisplayName }}</h2>
+            <p>version: {{ appInfo.plist.CFBundleShortVersionString }}</p>
+            <p>build: {{ appInfo.plist.CFBundleVersion }}</p>
           </div>
           <div style="padding: 5px; display: flex; height: 100%" v-if="dirty">
             <el-tooltip class="text-break" :content="status" placement="bottom" popper-class="poper">
@@ -63,7 +52,7 @@
       <div class="content-wrapper">
         <div class="content">
           <h2>配置信息</h2>
-          <div class="item" v-for="(value, key, index) in filterInfo()" :key="index">
+          <div class="item" v-for="(value, key, index) in appInfo.headfile" :key="index">
             <p>{{ fieldName(key) }}:</p>
             <p>{{ value }}</p>
           </div>
@@ -71,9 +60,9 @@
         <div class="image-snapshot">
           <h2>切图信息</h2>
           <div class="image-slices">
-            <div class="slice-item" v-for="(item, key, index) in appInfo.images" :key="index">
+            <div class="slice-item" v-for="(item, key, index) in appInfo.imageAssets" :key="index">
               <div>{{ key }}</div>
-              <img :src="item" class="slice">
+              <img :src="Array.prototype.slice.call(Object.values(item))[0]" class="slice">
             </div>
           </div>
         </div>
@@ -84,7 +73,6 @@
 
 <script>
 import { translate } from './translate'
-import { log } from 'util'
 import { getRequestDomain } from '../requestDomain'
 export default {
   data() {
@@ -112,6 +100,13 @@ export default {
       this.greeting = "Good evening"
     }
     this.reloadData()
+  },
+  computed: {
+    iconUrl: function () {
+      let icon = this.appInfo.imageAssets.AppIcon
+      let url = Array.prototype.slice.call(Object.values(icon))[0]
+      return url
+    }
   },
   methods: {
     preCommit () {
@@ -198,26 +193,16 @@ export default {
           // this.status = res.data.msg
         })
     },
-    filterInfo () {
-      let result = {}
-      for (const key in this.appInfo) {
-        if (['CFBundleDisplayName', 'CFBundleShortVersionString', 'CFBundleVersion', 'images'].includes(key)) continue
-        result[key] = this.appInfo[key]
-      }
-      return result
-    },
     editInfo () {
       this.$router.push({
         name: 'appEdit',
-        params: { companyCode: this.appInfo.kCompanyCode }
+        params: { info: JSON.stringify(this.appInfo) }
       })
     },
     addApp () {
       this.$router.push({
         name: 'addApp',
-        params: {
-          tags: JSON.stringify(this.tags)
-        }
+        params: { tags: JSON.stringify(this.tags) }
       })
     },
     fieldName (field) {

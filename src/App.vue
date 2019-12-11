@@ -15,5 +15,6 @@
 body {
   font-size: 18px;
   margin: 0;
+  max-width: 100%;
 }
 </style>

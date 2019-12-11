@@ -1,40 +1,45 @@
 <template>
   <div>
+
     <div class="nav">
       <div class="title">编辑</div>
-      <el-button type="primary" icon="el-icon-message" @click="makeDiff" style="margin-right: 20px">保存</el-button>
+      <el-button type="primary" icon="el-icon-message" @click="diff" style="margin-right: 20px">保存</el-button>
     </div>
-    <div class="content" v-if="loaded">
+
+    <div class="content">
       <div class="section-wrapper">
-        <div class="section-title">字段编辑：</div>
+        <div class="section-title">文本编辑：</div>
         <table class="table" cellspacing="0" cellpadding="4">
-          <tr>
-            <th>字段名称</th>
-            <th>字段值</th>
-          </tr>
-          <tr v-for="(field, index) in textFields" :key="index">
+          <tr v-for="(value, key, index) in appInfo.plist" :key="index">
             <td>
-              <div class="text-field">{{ fieldName(field) }}</div>
+              <div class="text-field">{{ fieldName(key) }}</div>
             </td>
             <td>
-              <input class="text-input" placeholder="请输入" type="text" v-model="appInfo[field]">
+              <input class="text-input" placeholder="请输入" type="text" v-model="appInfo.plist[key]">
+            </td>
+          </tr>
+          <tr v-for="(value, key) in appInfo.headfile" :key="key">
+            <td>
+              <div class="text-field">{{ fieldName(key) }}</div>
+            </td>
+            <td>
+              <input class="text-input" placeholder="请输入" type="text" v-model="appInfo.headfile[key]">
             </td>
           </tr>
         </table>
       </div>
+
       <div class="section-wrapper">
         <div class="section-title">文件编辑</div>
-        <div class="upload-list">
           <upload-item
-            v-for="(imageUrl, imageName) in origInfo.images"
-            :key="imageName"
-            :title="imageName"
-            :previewUrl="imageUrl"
-            :fileList="appInfo.images[imageName]"
-            @fileChanged="uploadImages"
+            v-for="(obj, name) in origInfo.imageAssets"
+            :key="name"
+            :title="name"
+            :imageItems="obj"
+            @imageChanged="imageUpdated"
           />
-        </div>
       </div>
+      
     </div>
   </div>
 </template>
@@ -43,6 +48,8 @@
 import { translate } from './translate'
 import uploadItem from './imageUploadItem'
 import { getRequestDomain } from '../requestDomain'
+import { makeUpdateInfo } from './commonHelper'
+
 export default {
   components: {
     'upload-item': uploadItem
@@ -52,44 +59,15 @@ export default {
       origInfo: {},
       appInfo: {},
       updateInfo: {},
-      code: undefined,
-      loaded: false
-    }
-  },
-  computed: {
-    textFields: function () {
-      let res = []
-      for (const key in this.appInfo) {
-        if (key !== 'images') res.push(key)
-      }
-      return res
     }
   },
   created () {
-    this.code = this.$route.params.companyCode
-    this.fetchAppInfo()
+    let data = this.$route.params.info
+    this.origInfo = JSON.parse(data)
+    this.appInfo = JSON.parse(data)
   },
   methods: {
-    fetchAppInfo () {
-      let loading = this.$loading({ fullScreen: true })
-      this.$axios
-        .get(getRequestDomain() + '/project/projectInfo', {
-          params: {
-            "companyCode": this.code
-          }
-        })
-        .then(res => {
-          let data = JSON.stringify(res.data)
-          this.appInfo = JSON.parse(data)
-          this.origInfo = JSON.parse(data)
-          this.loaded = true
-          loading.close()
-        })
-        .catch(() => {
-          loading.close()
-        })
-    },
-    makeDiff: function () {
+    diff: function () {
       let _this = this
       this.updateInfo = this.getUpdateInfo()
       this.$alert(this.updateInfo, '修改内容', {
@@ -105,8 +83,7 @@ export default {
         companyCode: this.code,
         updateInfo: this.updateInfo
       }
-      this.$axios
-        .post(getRequestDomain() + '/project/editProject', postData)
+      this.$axios.post(getRequestDomain() + '/project/editProject', postData)
         .then(res => {
           _this.alertShow = false
           _this.$router.go(-1)
@@ -115,39 +92,16 @@ export default {
     },
     getUpdateInfo: function () {
       let result = {}
-      // text-field
-      this.textFields.forEach(key => {
-        if (this.origInfo.hasOwnProperty(key) && this.appInfo.hasOwnProperty(key)) {
-          if (this.origInfo[key] != this.appInfo[key]) result[key] = this.appInfo[key]
+      Object.keys(this.appInfo).forEach(key => {
+        let update = makeUpdateInfo(this.origInfo[key], this.appInfo[key])
+        if (Object.getOwnPropertyNames(update).length !== 0) {
+          result[key] = update
         }
       })
-      // images
-      let images = {}
-      Object
-        .keys(this.appInfo.images)
-        .forEach(key => {
-          let value = this.appInfo.images[key]
-          if (Array.isArray(value)) {
-            images[key] = value
-          }
-        })
-      if (Object.entries(images).length) {
-        result.images = images
-      }
       return result
     },
-    uploadImages: function (event, name) {
-      let form = new FormData()
-      let files = event.target.files
-      for (let index = 0; index < files.length; index++) {
-        const file = files[index];
-        form.append('image'+index, file)
-      }
-      this.$axios
-        .post(getRequestDomain() + '/files/upload', form)
-        .then(res => {
-          this.appInfo.images[name] = res.data
-        })
+    imageUpdated: function (name, subName, url) {
+      this.appInfo.imageAssets[name][subName] = url
     },
     fieldName: function (field) {
       return translate(field)
