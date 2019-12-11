@@ -62,7 +62,7 @@
           <div class="image-slices">
             <div class="slice-item" v-for="(item, key, index) in appInfo.imageAssets" :key="index">
               <div>{{ key }}</div>
-              <img :src="Array.prototype.slice.call(Object.values(item))[0]" class="slice">
+              <img :src="item[0]" class="slice">
             </div>
           </div>
         </div>
@@ -72,8 +72,7 @@
 </template>
 
 <script>
-import { translate } from './translate'
-import { getRequestDomain } from '../requestDomain'
+import { translate, getRequestDomain } from './helper'
 export default {
   data() {
     return {
@@ -104,8 +103,7 @@ export default {
   computed: {
     iconUrl: function () {
       let icon = this.appInfo.imageAssets.AppIcon
-      let url = Array.prototype.slice.call(Object.values(icon))[0]
-      return url
+      return icon[0]
     }
   },
   methods: {

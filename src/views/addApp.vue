@@ -61,9 +61,9 @@
 </template>
 
 <script>
-import { translate } from './translate'
+import { translate, getRequestDomain } from './helper'
 import uploadItem from './imageUploadItem'
-import { getRequestDomain } from '../requestDomain'
+
 export default {
   name: 'addApp',
   components: {

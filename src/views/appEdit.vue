@@ -32,11 +32,12 @@
       <div class="section-wrapper">
         <div class="section-title">文件编辑</div>
           <upload-item
-            v-for="(obj, name) in origInfo.imageAssets"
+            v-for="(urls, name) in appInfo.imageAssets"
             :key="name"
-            :title="name"
-            :imageItems="obj"
-            @imageChanged="imageUpdated"
+            :name="name"
+            :imageUrls="urls"
+            description="iconx9 launchx7 normalx2"
+            @changed="uploadImages"
           />
       </div>
       
@@ -45,10 +46,8 @@
 </template>
 
 <script>
-import { translate } from './translate'
+import { translate, getRequestDomain, makeUpdateInfo } from './helper'
 import uploadItem from './imageUploadItem'
-import { getRequestDomain } from '../requestDomain'
-import { makeUpdateInfo } from './commonHelper'
 
 export default {
   components: {
@@ -81,7 +80,7 @@ export default {
       let _this = this
       let postData = {
         companyCode: this.code,
-        updateInfo: this.updateInfo
+        form: this.updateInfo
       }
       this.$axios.post(getRequestDomain() + '/project/editProject', postData)
         .then(res => {
@@ -100,8 +99,18 @@ export default {
       })
       return result
     },
-    imageUpdated: function (name, subName, url) {
-      this.appInfo.imageAssets[name][subName] = url
+    uploadImages: function (event, name) {
+      let form = new FormData()
+      let files = event.target.files
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        form.append('image'+index, file)
+      }
+      this.$axios
+        .post(getRequestDomain() + '/files/upload', form)
+        .then(res => {
+          this.$set(this.appInfo.imageAssets, name, res.data)
+        })
     },
     fieldName: function (field) {
       return translate(field)
@@ -135,6 +144,7 @@ export default {
 }
 .table {
   width: 100%;
+  border: 1px solid #eaeaea;
 }
 .text-field {
   font-size: 18px;
@@ -156,17 +166,13 @@ tr:nth-of-type(odd) .text-input {
   background-color: #EBF3FF;
 }
 td:not(:last-child) {
-  border-left: 1px solid #eaeaea;
-  border-right: 1px solid #eaeaea;
-}
-td:last-child {
   border-right: 1px solid #eaeaea;
 }
 .section-title {
-  margin-top: 20px;
+  margin-top: 40px;
   text-align: left;
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 24px;
+  font-weight: bolder;
   color: #333;
 }
 .content {
