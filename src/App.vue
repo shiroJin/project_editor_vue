@@ -14,7 +14,7 @@
 }
 body {
   font-size: 18px;
-  margin: 0;
+  margin: 0 0 30px 0;
   max-width: 100%;
 }
 </style>

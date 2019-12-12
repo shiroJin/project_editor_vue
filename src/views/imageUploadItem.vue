@@ -27,12 +27,17 @@ export default {
     },
     description: {
       type: String
+    },
+    fileType: {
+      type: String,
+      default: "image"
     }
   },
   methods: {
     filename (url) {
       let file = url.split('/').pop()
-      return file.split('.').shift()
+      let name = file.split('.').shift()
+      return name
     }
   }
 }

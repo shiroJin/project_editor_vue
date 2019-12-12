@@ -51,18 +51,27 @@
       </div>
       <div class="content-wrapper">
         <div class="content">
-          <h2>配置信息</h2>
+          <h2>配置</h2>
           <div class="item" v-for="(value, key, index) in appInfo.headfile" :key="index">
             <p>{{ fieldName(key) }}:</p>
-            <p>{{ value }}</p>
+            <p>{{ value || "未配置" }}</p>
           </div>
         </div>
         <div class="image-snapshot">
-          <h2>切图信息</h2>
+          <h2>切图</h2>
           <div class="image-slices">
             <div class="slice-item" v-for="(item, key, index) in appInfo.imageAssets" :key="index">
               <div>{{ key }}</div>
               <img :src="item[0]" class="slice">
+            </div>
+          </div>
+        </div>
+        <div>
+          <h2>文件</h2>
+          <div class="file-wrapper">
+            <div class="file-item" v-for="(item, key) in appInfo.files" :key="key">
+              <div>{{ filename(item) }}</div>
+              <div>{{ item.length > 0 ? "FILE" : "空" }}</div>
             </div>
           </div>
         </div>
@@ -107,6 +116,9 @@ export default {
     }
   },
   methods: {
+    filename (url) {
+      return url.split('/').pop()
+    },
     preCommit () {
       this.$prompt('请输入Commit内容', '提示', {
         confirmButtonText: '确定',
@@ -294,9 +306,9 @@ export default {
   display: flex;
 }
 .slice {
-  margin: 5px;
-  border: 1px dashed black;
-  max-width: 100px;
+  margin: 10px 15px;
+  border: 1px dashed lightgrey;
+  width: 100px;
 }
 .content-wrapper {
   min-width: 700px;
@@ -321,5 +333,14 @@ export default {
 }
 .el-icon-arrow-down {
   font-size: 12px;
+}
+.file-wrapper {
+  display: flex;
+}
+.file-item {
+  padding: 20px;
+  border: 1px solid lightgray;
+  border-radius: 10px;
+  font-size: 15px;
 }
 </style>

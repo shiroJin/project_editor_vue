@@ -30,15 +30,28 @@
       </div>
 
       <div class="section-wrapper">
+        <div class="section-title">图片编辑</div>
+        <upload-item
+          v-for="(urls, name) in appInfo.imageAssets"
+          :key="name"
+          :name="name"
+          :imageUrls="urls"
+          fileType="image"
+          description="iconx9 launchx7 normalx2"
+          @changed="uploadImages"
+        />
+      </div>
+
+      <div class="section-wrapper">
         <div class="section-title">文件编辑</div>
-          <upload-item
-            v-for="(urls, name) in appInfo.imageAssets"
-            :key="name"
-            :name="name"
-            :imageUrls="urls"
-            description="iconx9 launchx7 normalx2"
-            @changed="uploadImages"
-          />
+        <upload-item
+          v-for="(url, name) in appInfo.files" :key="name"
+          description="ocr文件"
+          fileType="file"
+          :name="name"
+          :fileUrl="url"
+          @changed="uploadFile"
+        />
       </div>
       
     </div>
@@ -98,6 +111,19 @@ export default {
         }
       })
       return result
+    },
+    uploadFile: function (event, name) {
+      let form = new FormData()
+      let files = event.target.files
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        form.append('image'+index, file)
+      }
+      this.$axios
+        .post(getRequestDomain() + '/files/upload', form)
+        .then(res => {
+          this.$set(this.appInfo.files, name, res.data[0])
+        })
     },
     uploadImages: function (event, name) {
       let form = new FormData()
