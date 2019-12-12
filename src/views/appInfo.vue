@@ -138,12 +138,12 @@ export default {
     },
     reloadData () {
       this.fetchCurrentApp()
-      this.fetchProjectRepositoryInfo()
+      this.fetchRepositoryInfo()
     },
     trash () {
       this.loading = this.$loading({ fullscreen: true })
       this.$axios
-        .post('/project/trash')
+        .post(getRequestDomain() + '/project/trash')
         .then(res => {
           this.loading.close()
           this.reloadData()
@@ -193,11 +193,11 @@ export default {
           this.loading.close()
         })
     },
-    fetchProjectRepositoryInfo () {
+    fetchRepositoryInfo () {
       this.$axios
         .get(getRequestDomain() + '/project/repositoryInfo')
         .then(res => {
-          this.dirty = res.data.is_dirty
+          this.dirty = res.data.dirty
           this.apps = res.data.project_list
           this.tags = res.data.tags
           // this.status = res.data.msg
