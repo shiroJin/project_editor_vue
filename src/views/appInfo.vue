@@ -50,15 +50,22 @@
         </div>
       </div>
       <div class="content-wrapper">
-        <div class="content">
-          <h2>配置</h2>
-          <div class="item" v-for="(value, key, index) in appInfo.headfile" :key="index">
+        <div class="section-wrapper">
+          <div class="section-title">Xcode</div>
+          <div class="item" v-for="(value, key, index) in appInfo.pbxproj" :key="index">
             <p>{{ fieldName(key) }}:</p>
             <p>{{ value || "未配置" }}</p>
           </div>
         </div>
-        <div class="image-snapshot">
-          <h2>切图</h2>
+        <div class="section-wrapper">
+          <div class="section-title">项目配置</div>
+          <div class="item" v-for="(value, key) in appInfo.headfile" :key="key">
+            <p>{{ fieldName(key) }}:</p>
+            <p>{{ value || "未配置" }}</p>
+          </div>
+        </div>
+        <div class="section-wrapper">
+          <div class="section-title">切图</div>
           <div class="image-slices">
             <div class="slice-item" v-for="(item, key, index) in appInfo.imageAssets" :key="index">
               <div>{{ key }}</div>
@@ -66,8 +73,8 @@
             </div>
           </div>
         </div>
-        <div>
-          <h2>文件</h2>
+        <div class="section-wrapper">
+          <div class="section-title">文件</div>
           <div class="file-wrapper">
             <div class="file-item" v-for="(item, key) in appInfo.files" :key="key">
               <div>{{ filename(item) }}</div>
@@ -132,7 +139,7 @@ export default {
         .post(getRequestDomain() + '/project/commit', {
           msg: message
         })
-        .then(res => {
+        .then(() => {
           this.reloadData()
         })
     },
@@ -144,11 +151,11 @@ export default {
       this.loading = this.$loading({ fullscreen: true })
       this.$axios
         .post(getRequestDomain() + '/project/trash')
-        .then(res => {
+        .then(() => {
           this.loading.close()
           this.reloadData()
         })
-        .catch(err => {
+        .catch(() => {
           this.loading.close()
         })
     },
@@ -172,10 +179,10 @@ export default {
         .post(getRequestDomain() + '/project/checkout', {
           companyCode: app.code
         })
-        .then(res => {
+        .then(() => {
           this.fetchCurrentApp()
         })
-        .catch(err => {
+        .catch(() => {
           this.loading.close()
         })
     },
@@ -189,7 +196,7 @@ export default {
           this.appInfo = res.data
           this.loading.close()
         })
-        .catch(err => {
+        .catch(() => {
           this.loading.close()
         })
     },
@@ -221,10 +228,10 @@ export default {
     updateCurrent () {
       this.loading = this.$loading({ fullscreen: true })
       this.$axios.post(getRequestDomain() + "/project/pullCurrent")
-        .then(res => {
+        .then(() => {
           this.reloadData()
         })
-        .catch(err => {
+        .catch(() => {
           this.loading.close()
         })
     }
@@ -233,6 +240,13 @@ export default {
 </script>
 
 <style scoped>
+.section-title {
+  width: 100%;
+  text-align: left;
+  margin-bottom: 10px;
+  font-size: 24px;
+  font-weight: bold;
+}
 .info-container {
   display: flex;
   flex-direction: column;
@@ -279,23 +293,17 @@ export default {
 .item p {
   margin: 5px 0;
 }
-.content {
+.section-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   align-content: center;
+  margin: 30px 0;
 }
 .content h2 {
   margin-bottom: 5px;
   text-align: left;
-}
-.image-snapshot {
-  width: 100%;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 .image-snapshot h2 {
   margin-bottom: 5px;
@@ -335,6 +343,7 @@ export default {
   font-size: 12px;
 }
 .file-wrapper {
+  width: 100%;
   display: flex;
 }
 .file-item {

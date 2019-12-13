@@ -8,7 +8,21 @@
 
     <div class="content">
       <div class="section-wrapper">
-        <div class="section-title">文本编辑：</div>
+        <div class="section-title">Xcode配置</div>
+        <table class="table" cellspacing="0" cellpadding="4">
+          <tr v-for="(value, key) in appInfo.pbxproj" :key="key">
+            <td>
+              <div class="text-field">{{ fieldName(key) }}</div>
+            </td>
+            <td>
+              <input class="text-input" placeholder="请输入" type="text" v-model="appInfo.pbxproj[key]">
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="section-wrapper">
+        <div class="section-title">项目配置</div>
         <table class="table" cellspacing="0" cellpadding="4">
           <tr v-for="(value, key, index) in appInfo.plist" :key="index">
             <td>
@@ -30,7 +44,7 @@
       </div>
 
       <div class="section-wrapper">
-        <div class="section-title">图片编辑</div>
+        <div class="section-title">图片</div>
         <upload-item
           v-for="(urls, name) in appInfo.imageAssets"
           :key="name"
@@ -43,7 +57,7 @@
       </div>
 
       <div class="section-wrapper">
-        <div class="section-title">文件编辑</div>
+        <div class="section-title">文件</div>
         <upload-item
           v-for="(url, name) in appInfo.files" :key="name"
           description="ocr文件"

@@ -48,10 +48,13 @@ let fieldMap = {
   kWechatAppId: '微信App Id', 
   kWechatAppKey: '微信App Key',
   kAppUpdateUrl: 'APP更新地址',
+  PROVISIONING_PROFILE_SPECIFIER: '描述文件',
+  CODE_SIGN_IDENTITY: '签名'
 }
 
-function translate (string) {
-  return fieldMap[string]
+function translate (fieldname) {
+  let output = fieldMap[fieldname]
+  return output || fieldname
 }
 
 function getRequestDomain() {

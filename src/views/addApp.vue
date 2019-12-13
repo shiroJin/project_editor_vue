@@ -4,6 +4,7 @@
       <div class="title">新增应用</div>
       <el-button type="primary" icon="el-icon-message" @click="submit" style="margin-right: 20px">保存</el-button>
     </div>
+
     <div class="content">
       <div class="section-wrapper">
         <div class="section-title">版本选择:</div>
@@ -19,43 +20,68 @@
           </el-dropdown-menu>
         </el-dropdown>
       </div>
+      
       <div class="section-wrapper">
-        <div class="section-title">字段编辑：</div>
+        <div class="section-title">Xcode配置</div>
         <table class="table" cellspacing="0" cellpadding="4">
-          <tr>
-            <th>字段名称</th>
-            <th>字段值</th>
-          </tr>
-          <tr v-for="(field, index) in textFields" :key="index">
+          <tr v-for="(value, key) in form.pbxproj" :key="key">
             <td>
-              <div class="text-field">{{ fieldName(field) }}</div>
+              <div class="text-field">{{ fieldName(key) }}</div>
             </td>
             <td>
-              <input class="text-input" placeholder="请输入" type="text" v-model="form[field]">
+              <input class="text-input" placeholder="请输入" type="text" v-model="form.pbxproj[key]">
             </td>
           </tr>
         </table>
       </div>
+
       <div class="section-wrapper">
-        <div class="section-title">文件编辑</div>
-        <div class="upload-list image-section">
-          <upload-item
-            v-for="(imageList, imageName) in form.images"
-            :key="imageName"
-            :title="imageName"
-            :fileList="imageList"
-            @fileChanged="uploadImages"
-          />
-        </div>
-        <div class="upload-list">
-          <upload-item
-            v-for="(value, fileName, index) in form.files"
-            :key="index"
-            :title="fileName"
-            @fileChanged="uploadFiles"
-          />
-        </div>
+        <div class="section-title">项目配置</div>
+        <table class="table" cellspacing="0" cellpadding="4">
+          <tr v-for="(value, key, index) in form.plist" :key="index">
+            <td>
+              <div class="text-field">{{ fieldName(key) }}</div>
+            </td>
+            <td>
+              <input class="text-input" placeholder="请输入" type="text" v-model="form.plist[key]">
+            </td>
+          </tr>
+          <tr v-for="(value, key) in form.headfile" :key="key">
+            <td>
+              <div class="text-field">{{ fieldName(key) }}</div>
+            </td>
+            <td>
+              <input class="text-input" placeholder="请输入" type="text" v-model="form.headfile[key]">
+            </td>
+          </tr>
+        </table>
       </div>
+
+      <div class="section-wrapper">
+        <div class="section-title">图片</div>
+        <upload-item
+          v-for="(urls, name) in form.imageAssets"
+          :key="name"
+          :name="name"
+          :imageUrls="urls"
+          fileType="image"
+          description="iconx9 launchx7 normalx2"
+          @changed="uploadImages"
+        />
+      </div>
+
+      <div class="section-wrapper">
+        <div class="section-title">文件</div>
+        <upload-item
+          v-for="(url, name) in form.files" :key="name"
+          description="ocr文件"
+          fileType="file"
+          :name="name"
+          :fileUrl="url"
+          @changed="uploadFile"
+        />
+      </div>
+
     </div>
   </div>
 </template>
@@ -77,17 +103,6 @@ export default {
       tags: []
     }
   },
-  computed: {
-    textFields: function () {
-      let res = []
-      for (const key in this.form) {
-        if (!["images", "files", "Tag"].includes(key)) {
-          res.push(key)          
-        }
-      }
-      return res
-    }
-  },
   created () {
     this.tags = JSON.parse(this.$route.params.tags)
     this.$axios
@@ -103,11 +118,10 @@ export default {
     uploadImages (event, name) {
       this.upload(event, name, 'image')
     },
-    uploadFiles (event, name) {
+    uploadFile (event, name) {
       this.uploadFile(event, name, 'file')
     },
     upload (event, name, type) {
-      let _this = this
       let data = new FormData()
       for (let i = 0; i < event.target.files.length; i++) {
         data.append(String(i), event.target.files[i])
@@ -116,15 +130,14 @@ export default {
         .post(getRequestDomain() + '/files/upload', data)
         .then(res => {
           if (type == 'image') {
-            _this.form.images[name] = res.data
+            this.form.images[name] = res.data
           } else if (type == 'file') {
-            _this.form.files[name] = res.data[0]
+            this.form.files[name] = res.data[0]
           }
         })
         .catch(() => { _this.$toast.fail('文件上传失败' + name) })
     },
     submit () {
-      let _this = this
       let postData = JSON.parse(JSON.stringify(this.form))
       this.$toast.loading({
         mask: true,
@@ -133,10 +146,10 @@ export default {
       this.$axios
         .post(getRequestDomain() + '/project/addProject', postData)
         .then(res => {
-          _this.$toast.clear()
-          _this.result = res.data
+          this.$toast.clear()
+          this.result = res.data
         })
-        .catch(() => _this.$toast.fail())
+        .catch(() => this.$toast.fail())
     },
     fieldName (field) {
       return translate(field)
@@ -146,17 +159,6 @@ export default {
 </script>
 
 <style scoped>
-.section-wrapper {
-  display: flex;
-  flex-direction: column;
-}
-.section-title {
-  margin-top: 20px;
-  text-align: left;
-  font-size: 20px;
-  font-weight: bold;
-  color: #333;
-}
 .submit-button {
   width: 100px;
   height: 50px;
