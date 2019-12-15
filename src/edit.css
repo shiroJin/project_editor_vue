@@ -1,0 +1,79 @@
+.table {
+  width: 100%;
+  border: 1px solid #eaeaea;
+}
+.cell {
+  display: flex;
+  align-items: center;
+}
+.cell-left {
+  flex: 2;
+  padding: 5px;
+  border-right: 1px solid lightgray;
+  text-align:right;
+}
+.cell-right {
+  flex: 5;
+  padding: 5px;
+  text-align:right;
+}
+.cell:nth-of-type(odd) {
+  background-color: #ebf3ff;
+}
+.cell:nth-of-type(odd) .text-input {
+  background-color: #EBF3FF;
+}
+.text-field {
+  font-size: 15px;
+}
+.text-input { 
+  width: 100%;
+  height: 100%;
+  border-width: 0;
+  font-size: 15px;
+}
+.content {
+  margin: 0 60px;
+}
+.upload-list {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+}
+.urltype-item {
+  display: flex;
+  justify-content: space-between;
+  margin: 2px 0;
+}
+.delete {
+  width: 24px;
+  height: 24px;
+  text-align: center;
+  background-color: red;
+  color: white;
+  font-size: 30px;
+  line-height: 24px;
+  font-weight: 900;
+  border-radius: 12px;
+  margin-left: 5px;
+}
+.add {
+  margin-left: 5px;
+  width: 24px;
+  height: 24px;
+  text-align: center;
+  background-color: lightskyblue;
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 900;
+  color: white;
+  border-radius: 12px;
+}
+.image-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+}
+.file-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+}

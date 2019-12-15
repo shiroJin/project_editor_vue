@@ -4,10 +4,10 @@
       <div class="title">{{ greeting }}</div>
       <div class="action">
         <el-dropdown class="dropdown" @command="checkout">
-          <span class="el-dropdown-link">
-            <div>切换App</div>
+          <div class="el-dropdown-link" style="margin:5px 8px;height:27px;">
+            <span>切换应用</span>
             <i class="el-icon-arrow-down el-icon--right"></i>
-          </span>
+          </div>
           <el-dropdown-menu class="dropdown-menu" slot="dropdown">
             <el-dropdown-item
               v-for="(item, index) in apps" 
@@ -39,8 +39,9 @@
         </div>
         <div class="menu">
           <div class="menu-worktree" v-if="dirty">
-            <el-button type="warning" icon="el-icon-delete" @click="trash">Trash</el-button>
+            <el-button type="warning" icon="el-icon-delete" @click="trash">Recover</el-button>
             <el-button type="success" icon="el-icon-check" @click="preCommit">Commit</el-button>
+            <el-button type="primary" @click="editInfo" icon="el-icon-edit">Edit</el-button>
           </div>
           <div class="menu-edit" v-if="!dirty">
             <el-button type="primary" @click="updateCurrent" icon="el-icon-refresh-left">Update</el-button>
@@ -49,23 +50,37 @@
           </div>
         </div>
       </div>
+      
       <div class="content-wrapper">
         <div class="section-wrapper">
-          <div class="section-title">Xcode</div>
+          <div class="section-title"><i class="el-icon-setting" />  Xcode配置</div>
           <div class="item" v-for="(value, key, index) in appInfo.pbxproj" :key="index">
             <p>{{ fieldName(key) }}:</p>
             <p>{{ value || "未配置" }}</p>
           </div>
-        </div>
-        <div class="section-wrapper">
-          <div class="section-title">项目配置</div>
-          <div class="item" v-for="(value, key) in appInfo.headfile" :key="key">
-            <p>{{ fieldName(key) }}:</p>
-            <p>{{ value || "未配置" }}</p>
+          <div style="margin-top:15px;width:100%;display:flex;" v-if="appInfo.plist.urlTypes.length">
+            <div style="flex:1;text-align:left;font-weight:bolder">URL TYPES</div>
+            <div class="url-types-wrapper" style="flex:3">
+              <div style="color:gray;line-height:20px;font-size:13px;display:flex;justify-content:space-between;padding-left:30px;font-weight:bold">
+                <span>URL Identify</span><span>URL Scheme</span>
+              </div>
+              <div style="display:flex;justify-content: space-between;padding-left:30px;" v-for="(item, index) in appInfo.plist.urlTypes" :key="index">
+                <span>{{ item.identify }}</span><span>{{ item.scheme }}</span>
+              </div>
+            </div>
           </div>
         </div>
+
         <div class="section-wrapper">
-          <div class="section-title">切图</div>
+          <div class="section-title"><i class="el-icon-document" />  项目配置</div>
+          <div class="item" v-for="(value, key) in appInfo.headfile" :key="key">
+            <p>{{ fieldName(key) }}:</p>
+            <p :class="{'gray-color' : !value}">{{ value || "未配置" }}</p>
+          </div>
+        </div>
+
+        <div class="section-wrapper">
+          <div class="section-title"><i class="el-icon-picture-outline" />  切图</div>
           <div class="image-slices">
             <div class="slice-item" v-for="(item, key, index) in appInfo.imageAssets" :key="index">
               <div>{{ key }}</div>
@@ -73,12 +88,13 @@
             </div>
           </div>
         </div>
+
         <div class="section-wrapper">
-          <div class="section-title">文件</div>
+          <div class="section-title"><i class="el-icon-tickets" />  文件</div>
           <div class="file-wrapper">
             <div class="file-item" v-for="(item, key) in appInfo.files" :key="key">
-              <div>{{ filename(item) }}</div>
-              <div>{{ item.length > 0 ? "FILE" : "空" }}</div>
+              <div>{{ key }}</div>
+              <div>{{ item.length > 0 ? "FILE" : "无" }}</div>
             </div>
           </div>
         </div>
@@ -88,7 +104,7 @@
 </template>
 
 <script>
-import { translate, getRequestDomain } from './helper'
+import { translate, requestDomain } from './helper'
 export default {
   data() {
     return {
@@ -122,6 +138,13 @@ export default {
       return icon[0]
     }
   },
+  activated () {
+    let refresh = this.$store.state.needRefresh
+    if (refresh) {
+      this.reloadData()
+      this.$store.commit('setRefreshed')
+    }
+  },
   methods: {
     filename (url) {
       return url.split('/').pop()
@@ -136,7 +159,7 @@ export default {
     },
     commit (message) {
       this.$axios
-        .post(getRequestDomain() + '/project/commit', {
+        .post(requestDomain() + '/project/commit', {
           msg: message
         })
         .then(() => {
@@ -150,7 +173,7 @@ export default {
     trash () {
       this.loading = this.$loading({ fullscreen: true })
       this.$axios
-        .post(getRequestDomain() + '/project/trash')
+        .post(requestDomain() + '/project/trash')
         .then(() => {
           this.loading.close()
           this.reloadData()
@@ -162,7 +185,7 @@ export default {
     pull () {
       this.loading = this.$loading({ fullscreen: true })
       this.$axios
-        .post(getRequestDomain() + '/project/pull')
+        .post(requestDomain() + '/project/pull')
         .then(res => {
           let msg = res.data.msg
           this.loading.close()
@@ -176,7 +199,7 @@ export default {
     checkout (app) {
       this.loading = this.$loading({ fullscreen: true })
       this.$axios
-        .post(getRequestDomain() + '/project/checkout', {
+        .post(requestDomain() + '/project/checkout', {
           companyCode: app.code
         })
         .then(() => {
@@ -187,11 +210,11 @@ export default {
         })
     },
     fetchCurrentApp () {
-      if (this.loading === undefined) {
+      if (!this.loading) {
         this.loading = this.$loading({ fullscreen: true })
       }
       this.$axios
-        .get(getRequestDomain() + '/project/current')
+        .get(requestDomain() + '/project/current')
         .then(res => {
           this.appInfo = res.data
           this.loading.close()
@@ -202,7 +225,7 @@ export default {
     },
     fetchRepositoryInfo () {
       this.$axios
-        .get(getRequestDomain() + '/project/repositoryInfo')
+        .get(requestDomain() + '/project/repositoryInfo')
         .then(res => {
           this.dirty = res.data.dirty
           this.apps = res.data.project_list
@@ -227,7 +250,7 @@ export default {
     },
     updateCurrent () {
       this.loading = this.$loading({ fullscreen: true })
-      this.$axios.post(getRequestDomain() + "/project/pullCurrent")
+      this.$axios.post(requestDomain() + "/project/pullCurrent")
         .then(() => {
           this.reloadData()
         })
@@ -240,26 +263,19 @@ export default {
 </script>
 
 <style scoped>
-.section-title {
-  width: 100%;
-  text-align: left;
-  margin-bottom: 10px;
-  font-size: 24px;
-  font-weight: bold;
-}
 .info-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin: 0 60px;
-  font-size: 18px;
+  font-size: 15px;
 }
 .header {
   display: flex;
   justify-content: space-between;
   padding-bottom: 15px;
   border-bottom: 1px dashed lightgrey;
-  min-width: 700px;
+  min-width: 800px;
 }
 .app-wrapper {
   display: flex;
@@ -319,7 +335,7 @@ export default {
   width: 100px;
 }
 .content-wrapper {
-  min-width: 700px;
+  min-width: 800px;
 }
 .action {
   margin-right: 15px;
@@ -331,13 +347,15 @@ export default {
 }
 .el-dropdown-link {
   cursor: pointer;
-  color: #2f85ff;
-  padding: 8px;
+  margin: 8px;
   border-radius: 3px;
   font-weight: bold;
-  font-size: 17px;
+  font-size: 15px;
   display: flex;
   align-items: center;
+  background-color:#409EFF;
+  color:white;
+  border-radius: 4px;
 }
 .el-icon-arrow-down {
   font-size: 12px;
@@ -351,5 +369,11 @@ export default {
   border: 1px solid lightgray;
   border-radius: 10px;
   font-size: 15px;
+}
+.gray-color {
+  color: lightgray;
+}
+.menu {
+  align-self: flex-start;
 }
 </style>

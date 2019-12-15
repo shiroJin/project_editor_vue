@@ -87,7 +87,7 @@
 </template>
 
 <script>
-import { translate, getRequestDomain } from './helper'
+import { translate, requestDomain } from './helper'
 import uploadItem from './imageUploadItem'
 
 export default {
@@ -106,7 +106,7 @@ export default {
   created () {
     this.tags = JSON.parse(this.$route.params.tags)
     this.$axios
-      .get(getRequestDomain() + '/project/app-form')
+      .get(requestDomain() + '/project/app-form')
       .then(res => {
         this.form = res.data
       })
@@ -127,7 +127,7 @@ export default {
         data.append(String(i), event.target.files[i])
       }
       this.$axios
-        .post(getRequestDomain() + '/files/upload', data)
+        .post(requestDomain() + '/files/upload', data)
         .then(res => {
           if (type == 'image') {
             this.form.images[name] = res.data
@@ -144,8 +144,8 @@ export default {
         message: '提交中...'
       })
       this.$axios
-        .post(getRequestDomain() + '/project/addProject', postData)
-        .then(res => {
+        .post(requestDomain() + '/project/addProject', postData)
+        .then(() => {
           this.$toast.clear()
           this.result = res.data
         })
@@ -182,13 +182,13 @@ export default {
   border: 1px solid #eaeaea;
 }
 .text-field {
-  font-size: 18px;
+  font-size: 15px;
 }
 .text-input {
   width: 100%;
   height: 100%;
   border-width: 0;
-  font-size: 18px;
+  font-size: 15px;
   text-align: center;
 }
 tr {
