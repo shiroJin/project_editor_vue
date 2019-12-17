@@ -196,18 +196,25 @@ export default {
           id: app.id
         })
         .then(() => {
-          this.fetchCurrentApp()
+          this.fetchCurrentApp(app.id)
         })
         .catch(() => {
           this.loading.close()
         })
     },
-    fetchCurrentApp () {
+    fetchCurrentApp (id) {
       if (!this.loading) {
         this.loading = this.$loading({ fullscreen: true })
       }
+      if (!id) {
+        id = ""
+      }
       this.$axios
-        .get(requestDomain() + '/project/current')
+        .get(`${requestDomain()}/project/projectInfo`, {
+          params: {
+            id: id
+          }
+        })
         .then(res => {
           this.appInfo = res.data
           this.loading.close()
