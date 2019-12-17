@@ -116,12 +116,13 @@ export default {
     },
     diff: function () {
       this.updateInfo = this.getUpdateInfo()
-      this.$alert(this.updateInfo, '修改内容', {
+      this.$confirm(this.updateInfo, '修改内容', {
         confirmButtonText: '确定',
-        callback: action => {
-          this.submit()
-        }
-      })
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.submit()
+      }).catch(() => {})
     },
     submit: function () {
       let postData = {

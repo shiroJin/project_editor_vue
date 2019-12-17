@@ -1,7 +1,9 @@
 <template>
   <div>
     <div class="nav">
-      <div class="title">{{ greeting }}</div>
+      <div class="title">
+        <div>Free my Mac</div>
+      </div>
       <div class="action">
         <el-dropdown class="dropdown" @command="checkout">
           <div class="el-dropdown-link" style="margin:5px 8px;height:27px;">
@@ -32,9 +34,9 @@
             <p>build: {{ appInfo.plist.CFBundleVersion }}</p>
           </div>
           <div style="padding: 5px; display: flex; height: 100%" v-if="dirty">
-            <el-tooltip class="text-break" :content="status" placement="bottom" popper-class="poper">
+            <!-- <el-tooltip class="text-break" :content="status" placement="bottom" popper-class="poper">
               <el-tag type="danger" style="margin-right: 15px">WorkTree Dirty</el-tag>
-            </el-tooltip>          
+            </el-tooltip>           -->
           </div>
         </div>
         <div class="menu">
@@ -58,10 +60,13 @@
             <p>{{ fieldName(key) }}:</p>
             <p>{{ value || "未配置" }}</p>
           </div>
+
+          <div style="background-color:#eee;width:100%;height:2px;"></div>
+
           <div style="margin-top:15px;width:100%;display:flex;" v-if="appInfo.plist.urlTypes.length">
             <div style="flex:1;text-align:left;font-weight:bolder">URL TYPES</div>
             <div class="url-types-wrapper" style="flex:3">
-              <div style="color:gray;line-height:20px;font-size:13px;display:flex;justify-content:space-between;padding-left:30px;font-weight:bold">
+              <div class="url-types-tag">
                 <span>URL Identify</span><span>URL Scheme</span>
               </div>
               <div style="display:flex;justify-content: space-between;padding-left:30px;" v-for="(item, index) in appInfo.plist.urlTypes" :key="index">
@@ -84,7 +89,7 @@
           <div class="image-slices">
             <div class="slice-item" v-for="(item, key, index) in appInfo.imageAssets" :key="index">
               <div>{{ key }}</div>
-              <img :src="item[0]" class="slice">
+              <el-image fit="scale-down" :src="item[0]" class="slice" :preview-src-list="item"></el-image>
             </div>
           </div>
         </div>
@@ -114,22 +119,10 @@ export default {
       apps: [],
       loading: undefined,
       dirty: false,
-      status: '',
-      greeting: ''
+      status: ''
     }
   },
   created () {
-    let date = new Date()
-    let hour = date.getHours()
-    if (hour < 12) {
-      this.greeting = "Good morning"
-    }
-    else if (hour < 18) {
-      this.greeting = "Good afternoon"
-    }
-    else {
-      this.greeting = "Good evening"
-    }
     this.reloadData()
   },
   computed: {
@@ -200,7 +193,7 @@ export default {
       this.loading = this.$loading({ fullscreen: true })
       this.$axios
         .post(requestDomain() + '/project/checkout', {
-          companyCode: app.code
+          id: app.id
         })
         .then(() => {
           this.fetchCurrentApp()
@@ -333,6 +326,8 @@ export default {
   margin: 10px 15px;
   border: 1px dashed lightgrey;
   width: 100px;
+  height: 100px;
+  background-color: #fafafa;
 }
 .content-wrapper {
   min-width: 800px;
@@ -375,5 +370,15 @@ export default {
 }
 .menu {
   align-self: flex-start;
+}
+.url-types-tag {
+  color:gray;
+  line-height:20px;
+  font-size:13px;
+  display:flex;
+  justify-content:space-between;
+  padding-left:30px;
+  font-weight:bold;
+  font-style: italic;
 }
 </style>

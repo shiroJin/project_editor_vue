@@ -98,8 +98,8 @@ export default {
 }
 .upload-wrapper {
   position: relative;
-  width: 25px;
-  height: 25px;
+  width: 30px;
+  height: 30px;
 }
 .upload-wrapper img {
   width: 100%;
