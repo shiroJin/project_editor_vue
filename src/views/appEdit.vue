@@ -100,9 +100,11 @@ export default {
       origInfo: {},
       appInfo: {},
       updateInfo: {},
+      id: undefined
     }
   },
   created () {
+    this.id = this.$route.params.id
     let data = this.$route.params.info
     this.origInfo = JSON.parse(data)
     this.appInfo = JSON.parse(data)
@@ -126,7 +128,7 @@ export default {
     },
     submit: function () {
       let postData = {
-        companyCode: this.code,
+        id: this.id,
         form: this.updateInfo
       }
       this.$axios.post(requestDomain() + '/project/editProject', postData)

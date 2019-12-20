@@ -27,16 +27,16 @@
     <div class="info-container" v-if="appInfo">
       <div class="header">
         <div class="app-wrapper">
-          <img :src="iconUrl">
+          <img :src="iconUrl()">
           <div class="base-info">
             <h2>{{ appInfo.plist.CFBundleDisplayName }}</h2>
             <p>version: {{ appInfo.plist.CFBundleShortVersionString }}</p>
             <p>build: {{ appInfo.plist.CFBundleVersion }}</p>
           </div>
-          <div style="padding: 5px; display: flex; height: 100%" v-if="dirty">
-            <!-- <el-tooltip class="text-break" :content="status" placement="bottom" popper-class="poper">
-              <el-tag type="danger" style="margin-right: 15px">WorkTree Dirty</el-tag>
-            </el-tooltip>           -->
+          <div style="margin: 5px; display: flex;align-self: flex-start;" v-if="dirty">
+            <el-tooltip class="text-break" :content="status" placement="bottom" popper-class="poper">
+              <el-tag type="danger" style="margin-right: 15px">已编辑</el-tag>
+            </el-tooltip>          
           </div>
         </div>
         <div class="menu">
@@ -119,17 +119,12 @@ export default {
       apps: [],
       loading: undefined,
       dirty: false,
-      status: ''
+      status: '',
+      id: undefined
     }
   },
   created () {
     this.reloadData()
-  },
-  computed: {
-    iconUrl: function () {
-      let icon = this.appInfo.imageAssets.AppIcon
-      return icon[0]
-    }
   },
   activated () {
     let refresh = this.$store.state.needRefresh
@@ -139,6 +134,10 @@ export default {
     }
   },
   methods: {
+    iconUrl () {
+      let icon = this.appInfo.imageAssets.AppIcon
+      return icon[0]
+    },
     filename (url) {
       return url.split('/').pop()
     },
@@ -160,7 +159,7 @@ export default {
         })
     },
     reloadData () {
-      this.fetchCurrentApp()
+      this.fetchCurrentProject()
       this.fetchRepositoryInfo()
     },
     trash () {
@@ -195,24 +194,25 @@ export default {
         .post(requestDomain() + '/project/checkout', {
           id: app.id
         })
-        .then(() => {
-          this.fetchCurrentApp(app.id)
+        .then(res => {
+          this.$message({
+            message: res.data.msg
+          })
+          this.loading.close()
+          this.fetchAppInfo()
         })
         .catch(() => {
           this.loading.close()
         })
     },
-    fetchCurrentApp (id) {
+    fetchAppInfo () {
       if (!this.loading) {
         this.loading = this.$loading({ fullscreen: true })
-      }
-      if (!id) {
-        id = ""
       }
       this.$axios
         .get(`${requestDomain()}/project/projectInfo`, {
           params: {
-            id: id
+            id: this.id
           }
         })
         .then(res => {
@@ -230,13 +230,24 @@ export default {
           this.dirty = res.data.dirty
           this.apps = res.data.project_list
           this.tags = res.data.tags
-          // this.status = res.data.msg
+          this.status = res.data.status
+        })
+    },
+    fetchCurrentProject () {
+      this.$axios
+        .get(requestDomain() + '/project/current')
+        .then(res => {
+          this.id = res.data.id
+          this.fetchAppInfo()
+        })
+        .catch(err => {
+          alert(err.msg)
         })
     },
     editInfo () {
       this.$router.push({
         name: 'appEdit',
-        params: { info: JSON.stringify(this.appInfo) }
+        params: { info: JSON.stringify(this.appInfo), id: this.id }
       })
     },
     addApp () {

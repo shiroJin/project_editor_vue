@@ -21,7 +21,7 @@ function makeUpdateInfo (orig, dest) {
 }
 
 let fieldMap = {
-  kDistributioneBaseCommonUrl: '基础接口地址',
+  kDistributioneBaseCommonUrl: '接口地址',
   kJPushAppKeyString: '极光 Key',
   kJPushChannelID: '极光Channel',
   Tag: 'Tag',

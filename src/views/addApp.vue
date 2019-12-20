@@ -135,7 +135,7 @@ export default {
             this.form.files[name] = res.data[0]
           }
         })
-        .catch(() => { _this.$toast.fail('文件上传失败' + name) })
+        .catch(() => { this.$toast.fail('文件上传失败' + name) })
     },
     submit () {
       let postData = JSON.parse(JSON.stringify(this.form))
@@ -145,7 +145,7 @@ export default {
       })
       this.$axios
         .post(requestDomain() + '/project/addProject', postData)
-        .then(() => {
+        .then((res) => {
           this.$toast.clear()
           this.result = res.data
         })

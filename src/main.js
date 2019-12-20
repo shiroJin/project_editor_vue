@@ -11,6 +11,13 @@ Vue.config.productionTip = false
 Vue.prototype.$axios = axios
 Vue.use(ElementUI)
 
+router.beforeEach((to, from, next) => {
+  if (to.meta.title) {
+    document.title = to.meta.title
+  }
+  next()
+})
+
 new Vue({
   router,
   store,

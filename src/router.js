@@ -14,18 +14,25 @@ export default new Router({
       name: 'home',
       component: appInfo,
       meta: {
+        title: "项目信息-Free my Mac",
         keepAlive: true
       }
     },
     {
       path: '/addApp',
       name: 'addApp',
-      component: createApp
+      component: createApp,
+      meta: {
+        title: "编辑项目-Free my Mac"
+      }
     },
     {
       path: '/appEdit',
       name: 'appEdit',
-      component: appEdit
+      component: appEdit,
+      meta: {
+        title: "新增项目-Free my Mac"
+      }
     }
   ]
 })
