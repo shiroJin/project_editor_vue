@@ -5,8 +5,9 @@
         <div>Free my Mac</div>
       </div>
       <div class="action">
+        <el-button type="primary" icon="el-icon-refresh-left" @click="pull">Git Pull</el-button>
         <el-dropdown class="dropdown" @command="checkout">
-          <div class="el-dropdown-link" style="margin:5px 8px;height:27px;">
+          <div class="el-dropdown-link">
             <span>切换应用</span>
             <i class="el-icon-arrow-down el-icon--right"></i>
           </div>
@@ -20,10 +21,10 @@
             </el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
-        <el-button type="primary" @click="pull">Git Pull</el-button>
-        <el-button type="primary" @click="addApp">新增应用</el-button>
+        <el-button type="primary" icon="el-icon-plus" @click="addApp">新增应用</el-button>
       </div>
     </div>
+
     <div class="info-container" v-if="appInfo">
       <div class="header">
         <div class="app-wrapper">
@@ -46,9 +47,9 @@
             <el-button type="primary" @click="editInfo" icon="el-icon-edit">Edit</el-button>
           </div>
           <div class="menu-edit" v-if="!dirty">
-            <el-button type="primary" @click="updateCurrent" icon="el-icon-refresh-left">Update</el-button>
             <el-button type="primary" @click="editInfo" icon="el-icon-edit">Edit</el-button>
             <el-button type="primary" disabled icon="el-icon-s-operation">Merge</el-button>
+            <el-button type="primary" icon="el-icon-box" @click="packageIpa">Package</el-button>
           </div>
         </div>
       </div>
@@ -109,7 +110,7 @@
 </template>
 
 <script>
-import { translate, requestDomain } from './helper'
+import { translate, requestDomain } from '../js/helper'
 export default {
   data() {
     return {
@@ -179,10 +180,10 @@ export default {
       this.$axios
         .post(requestDomain() + '/project/pull')
         .then(res => {
-          let msg = res.data.msg
+          let data = res.data
           this.loading.close()
           this.$message({
-            message: msg,
+            message: data.stdout + data.stderr,
             duration: 3000,
             showClose: true
           })
@@ -256,24 +257,17 @@ export default {
         params: { tags: JSON.stringify(this.tags) }
       })
     },
+    packageIpa () {
+      console.log("package")
+    },
     fieldName (field) {
       return translate(field)
-    },
-    updateCurrent () {
-      this.loading = this.$loading({ fullscreen: true })
-      this.$axios.post(requestDomain() + "/project/pullCurrent")
-        .then(() => {
-          this.reloadData()
-        })
-        .catch(() => {
-          this.loading.close()
-        })
     }
   }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .info-container {
   display: flex;
   flex-direction: column;
@@ -353,25 +347,24 @@ export default {
 .action {
   margin-right: 15px;
   display: flex;
-}
-.action button {
-  padding: 5px;
-  margin: 5px;
-}
-.el-dropdown-link {
-  cursor: pointer;
-  margin: 8px;
-  border-radius: 3px;
-  font-weight: bold;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  background-color:#409EFF;
-  color:white;
-  border-radius: 4px;
-}
-.el-icon-arrow-down {
-  font-size: 12px;
+  button {
+    margin: 0 10px;
+    padding: 10px;
+  }
+  .el-dropdown-link {
+    height: 37px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    background-color:#409EFF;
+    color:white;
+    padding: 0 5px;
+  }
+  .el-icon-arrow-down {
+    font-size: 12px;
+  }
 }
 .file-wrapper {
   width: 100%;

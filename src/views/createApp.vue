@@ -158,8 +158,8 @@
 </template>
 
 <script>
-import { translate, requestDomain } from './helper'
-import uploadItem from './imageUploadItem'
+import { translate, requestDomain } from '../js/helper'
+import uploadItem from './uploadItem'
 
 export default {
   components: {
