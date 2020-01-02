@@ -12,18 +12,6 @@
 
       <div class="container">
         <div class="step1" v-if="active === 1">
-
-          <!-- <div class="form-item">
-            <div class="form-item-title"><span style="color:red;" v-if="requiredList.includes(key)">*</span>exist branch</div>
-            <div class="form-item-content">
-              <el-switch
-                v-model="existBranch"
-                active-color="#13ce66"
-                inactive-color="#eaeaea">
-              </el-switch>
-            </div>
-          </div> -->
-
           <div class="form-item">
             <div class="form-item-title"><span style="color:red;">*</span>branch</div>
             <div class="form-item-content">
@@ -201,6 +189,8 @@ export default {
     next: function () {
       let checkValue = this.validateConfiguration()
       if (checkValue) {
+        this.autoFillConfiguration()
+        console.log(this.configuration)
         this.active = 2
       } else {
         alert("填写相关信息")
@@ -212,6 +202,25 @@ export default {
       if (!this.configuration.target.length) return false
       if (!this.configuration.identify.length) return false
       return true
+    },
+    autoFillConfiguration: function () {
+      const reducer = (acc, value, index) => {
+        if (index === 0) {
+          return acc += value.toUpperCase()
+        } else {
+          return acc += value.toLowerCase()
+        }
+      }
+      let code = this.configuration.identify.split('').reduce(reducer, '')
+      if (!this.configuration.privateGroup.length) {
+        this.configuration.privateGroup = `ButlerFor${code}`
+      }
+      if (!this.configuration.imageAssets.length) {
+        this.configuration.imageAssets = `ImageAssetsFor${code}.xcassets`
+      }
+      if (!this.configuration.headfile.length) {
+        this.configuration.headfile = `SCAppConfigFor${code}.h`
+      }
     },
     deleteUrlType: function(item) {
       this.appInfo.plist.urlTypes = this.appInfo.plist.urlTypes.filter(type => type != item)
