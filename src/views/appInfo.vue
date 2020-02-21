@@ -48,7 +48,6 @@
           </div>
           <div class="menu-edit" v-if="!dirty">
             <el-button type="primary" @click="editInfo" icon="el-icon-edit">Edit</el-button>
-            <el-button type="primary" disabled icon="el-icon-s-operation">Merge</el-button>
             <el-button type="primary" icon="el-icon-box" @click="packageIpa">Package</el-button>
           </div>
         </div>
@@ -62,16 +61,30 @@
             <p>{{ value || "未配置" }}</p>
           </div>
 
-          <div style="background-color:#eee;width:100%;height:2px;"></div>
-
-          <div style="margin-top:15px;width:100%;display:flex;" v-if="appInfo.plist.urlTypes.length">
-            <div style="flex:1;text-align:left;font-weight:bolder">URL TYPES</div>
+          <div class="entitlements-wrapper" v-if="appInfo.plist.urlTypes.length">
+            <div class="subtitle-wrapper">Url types:</div>
             <div class="url-types-wrapper" style="flex:3">
               <div class="url-types-tag">
                 <span>URL Identify</span><span>URL Scheme</span>
               </div>
               <div style="display:flex;justify-content: space-between;padding-left:30px;" v-for="(item, index) in appInfo.plist.urlTypes" :key="index">
-                <span>{{ item.identify }}</span><span>{{ item.scheme }}</span>
+                <div>{{ item.identify }}</div>
+                <div>{{ item.scheme }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="entitlements-wrapper">
+            <div class="subtitle-wrapper">Entitlements:</div>
+            <div class="url-types-wrapper" style="flex:3">
+              <div class="url-types-tag">
+                <span>Key</span><span>Value</span>
+              </div>
+              <div style="display:flex;justify-content: space-between;padding-left:30px;" v-for="(value, key) in appInfo.entitlements" :key="key">
+                  <div class="item" v-if="!empty(value)">
+                    <div style="padding-right:10px">{{ fieldName(key) }}</div>
+                    <div style="white-space: pre-wrap">{{ fieldValue(value) }}</div>
+                  </div>
               </div>
             </div>
           </div>
@@ -110,7 +123,7 @@
 </template>
 
 <script>
-import { translate, requestDomain } from '../js/helper'
+import { translate, requestDomain, formatPrint } from '../js/helper'
 export default {
   data() {
     return {
@@ -262,6 +275,12 @@ export default {
     },
     fieldName (field) {
       return translate(field)
+    },
+    fieldValue (value) {
+      return formatPrint(value)
+    },
+    empty (value) {
+      return value.length === 0
     }
   }
 }
@@ -391,5 +410,17 @@ export default {
   padding-left:30px;
   font-weight:bold;
   font-style: italic;
+  margin-bottom: 10px;
+}
+.subtitle-wrapper {
+  flex:1;
+  text-align:left;
+}
+.entitlements-wrapper {
+  width: 100%;
+  border-top: 1px dashed lightgrey;
+  display: flex;
+  margin-top:5px;
+  padding-top: 5px;
 }
 </style>

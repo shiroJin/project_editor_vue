@@ -21,8 +21,11 @@
             <input class="cell-right text-input" placeholder="请输入" type="text" v-model="appInfo.pbxproj[key]">
           </div>
 
-          <div class="cell" style="border-bottom:1px solid #eaeaea"></div>
-
+          <div class="cell" v-for="(value, key) in appInfo.entitlements" :key="key">
+            <div class="cell-left text-field">{{ fieldName(key) }}</div>
+            <input class="cell-right text-input" placeholder="请输入" type="text" v-model="appInfo.entitlements[key]">
+          </div>
+          
           <div style="display:flex;">
             <div class="cell-left" style="display:flex;flex-direction:row-reverse;">
               <div class="add" @click="adddUrlType">+</div>
@@ -33,7 +36,7 @@
                 <span>URL Identify</span><span>URL Scheme</span>
               </div>
               <div class="urltype-item" v-for="(item, index) in appInfo.plist.urlTypes" :key="index">
-                <div style="flex:1;display:flex;">
+                <div style="flex:1;display:flex;padding: 2px 0;">
                   <input v-model="item.identify" type="text" style="flex:1;"/>
                   <input v-model="item.scheme" type="text" style="flex:1;" />
                 </div>

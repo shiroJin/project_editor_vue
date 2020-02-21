@@ -43,8 +43,14 @@ let fieldMap = {
   kWechatAppId: '微信 ID', 
   kWechatAppKey: '微信 Key',
   kAppUpdateUrl: '分享重定向地址',
-  PROVISIONING_PROFILE_SPECIFIER: 'Mobie Provision',
-  CODE_SIGN_IDENTITY: 'Code Sign'
+  PROVISIONING_PROFILE_SPECIFIER: 'Provisioning profile',
+  CODE_SIGN_IDENTITY: 'Identity',
+  'aps-environment': 'APS Environment',
+  'com.apple.developer.associated-domains': 'Associated Domains',
+  'com.apple.security.application-groups': 'Application Groups',
+  kWechatUniversalLink: '微信通用链',
+  kQQUniversalLink: 'QQ通用链',
+  DEVELOPMENT_TEAM: 'Team'
 }
 
 function translate (fieldname) {
@@ -58,8 +64,17 @@ function requestDomain() {
   return  protocol + '//' + hostname + ':3000'
 }
 
+function formatPrint (value) {
+  if (value instanceof Array) {
+    return value.join(',')
+  } else {
+    return value
+  }
+}
+
 export {
   requestDomain,
   translate,
-  makeUpdateInfo
+  makeUpdateInfo,
+  formatPrint
 }

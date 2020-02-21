@@ -22,7 +22,7 @@ export default new Router({
       name: 'addApp',
       component: createApp,
       meta: {
-        title: "编辑项目-Free my Mac"
+        title: "新增项目-Free my Mac"
       }
     },
     {
@@ -30,7 +30,7 @@ export default new Router({
       name: 'appEdit',
       component: appEdit,
       meta: {
-        title: "新增项目-Free my Mac"
+        title: "编辑项目-Free my Mac"
       }
     }
   ]
